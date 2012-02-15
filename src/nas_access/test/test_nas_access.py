@@ -193,10 +193,16 @@ class TestCase(unittest.TestCase):
             server.remove(filename)
 
             logging.debug('execute command')
+            if sys.platform == 'win32':
+                remote_command = 'cmd'
+                args = ('/c', 'echo', 'Hello', 'World!')
+            else:
+                remote_command = 'echo'
+                args = ('Hello', 'World!')
             return_code, error_msg = \
                 server.execute_command(dict(job_name='Testing',
-                                            remote_command='echo',
-                                            args=('Hello', 'World!'),
+                                            remote_command=remote_command,
+                                            args=args,
                                             output_path='echo.out'))
 
             logging.debug('pack outputs')
@@ -242,7 +248,7 @@ class TestCase(unittest.TestCase):
             logging.debug('execute bad command')
             code = "server.execute_command(dict(remote_command='no-such-command'))"
             if sys.platform == 'win32':
-                msg = "OSError('[Error 2] The system cannot find the file specified')"
+                msg = "WindowsError('[Error 2] The system cannot find the file specified')"
             else:
                 msg = "OSError('[Errno 2] No such file or directory')"
             assert_raises(self, code, globals(), locals(),
