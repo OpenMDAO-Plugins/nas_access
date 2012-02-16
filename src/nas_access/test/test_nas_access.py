@@ -83,6 +83,7 @@ class TestCase(unittest.TestCase):
             RAM.add_allocator(self.allocator)
         except Exception:
             os.chdir(self.orig_dir)
+            raise
 
     def tearDown(self):
         try:
@@ -192,10 +193,16 @@ class TestCase(unittest.TestCase):
             server.remove(filename)
 
             logging.debug('execute command')
+            if sys.platform == 'win32':
+                remote_command = 'cmd'
+                args = ('/c', 'echo', 'Hello', 'World!')
+            else:
+                remote_command = 'echo'
+                args = ('Hello', 'World!')
             return_code, error_msg = \
                 server.execute_command(dict(job_name='Testing',
-                                            remote_command='echo',
-                                            args=('Hello', 'World!'),
+                                            remote_command=remote_command,
+                                            args=args,
                                             output_path='echo.out'))
 
             logging.debug('pack outputs')
@@ -239,14 +246,13 @@ class TestCase(unittest.TestCase):
         server, server_info = RAM.allocate(dict(allocator=self.allocator.name))
         try:
             logging.debug('execute bad command')
-            return_code, error_msg = \
-                server.execute_command(dict(remote_command='no-such-command'))
+            code = "server.execute_command(dict(remote_command='no-such-command'))"
             if sys.platform == 'win32':
-                self.assertEqual(return_code, 1)
-                self.assertEqual(error_msg, ': Operation not permitted')
+                msg = "WindowsError('[Error 2] The system cannot find the file specified')"
             else:
-                self.assertEqual(return_code, 127)
-                self.assertEqual(error_msg, ': Key has expired')
+                msg = "OSError('[Errno 2] No such file or directory')"
+            assert_raises(self, code, globals(), locals(),
+                          protocol.RemoteError, msg)
 
             logging.debug('open bad file')
             msg = "Can't open '../../illegal-access', not within root"
