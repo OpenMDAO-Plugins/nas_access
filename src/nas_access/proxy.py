@@ -37,6 +37,9 @@ class NAS_Allocator(ResourceAllocator):
     server_host: string
         Name of host to communicate with.
 
+    username: string
+        Username on `dmz_host`.  Default is local username.
+
     Example resource configuration file entry::
 
         [Pleiades]
@@ -46,19 +49,22 @@ class NAS_Allocator(ResourceAllocator):
 
     """
 
-    def __init__(self, name='NAS_Allocator', dmz_host=None, server_host=None):
+    def __init__(self, name='NAS_Allocator', dmz_host=None, server_host=None,
+                 username=None):
         super(NAS_Allocator, self).__init__(name)
         self._lock = threading.Lock()
         self._servers = []
         self._dmz_host = dmz_host
         self._server_host = server_host
+        self._username = username
         self._logger.debug('init')
         self._conn = None
         self._pid = os.getpid()  # For protecting against copies due to fork.
         atexit.register(self.shutdown)
         if dmz_host and server_host:
             try:
-                self._conn = connect(dmz_host, server_host, name, self._logger)
+                self._conn = connect(dmz_host, server_host, username,
+                                     name, self._logger)
             except Exception as exc:
                 raise RuntimeError("%s: can't connect: %s" % (name, exc))
             self._logger.debug('connected to %r on %r', server_host, dmz_host)
@@ -76,7 +82,7 @@ class NAS_Allocator(ResourceAllocator):
             Configuration data is located under the section matching
             this allocator's `name`.
 
-        Allows modifying 'dmz_host' and 'server_host'.
+        Allows modifying 'dmz_host', 'server_host', and 'username'.
         """
         if cfg.has_option(self.name, 'dmz_host'):
             self._dmz_host = cfg.get(self.name, 'dmz_host')
@@ -86,10 +92,14 @@ class NAS_Allocator(ResourceAllocator):
             self._server_host = cfg.get(self.name, 'server_host')
             self._logger.debug('    server_host: %s', self._server_host)
 
+        if cfg.has_option(self.name, 'username'):
+            self._username = cfg.get(self.name, 'username')
+            self._logger.debug('    username: %s', self._username)
+
         if self._dmz_host and self._server_host:
             try:
                 self._conn = connect(self._dmz_host, self._server_host,
-                                     self.name, self._logger)
+                                     self._username, self.name, self._logger)
             except Exception as exc:
                 raise RuntimeError("%s: can't connect: %s" % (self.name, exc))
             self._logger.debug('connected')
@@ -173,7 +183,7 @@ class NAS_Allocator(ResourceAllocator):
                               timeout=timeout)
         proxy_name = '%s/%s' % (self.name, name)
         server = NAS_Server(proxy_name, self._dmz_host, self._server_host,
-                            r_pid, r_root)
+                            self._username, r_pid, r_root)
         self._servers.append(server)
         return server
 
@@ -213,12 +223,12 @@ class NAS_Allocator(ResourceAllocator):
 class NAS_Server(object):
     """ Knows about executing a command via DMZ protocol. """
 
-    def __init__(self, name, dmz_host, server_host, pid, path):
+    def __init__(self, name, dmz_host, server_host, username, pid, path):
         self._name = name
         self._host = server_host
         self._pid = pid
         self._logger = logging.getLogger(name)
-        self._conn = connect(dmz_host, server_host, path, self._logger)
+        self._conn = connect(dmz_host, server_host, username, path, self._logger)
         self._proxies = []
         self._close = _Finalizer()
 
@@ -292,7 +302,8 @@ class NAS_Server(object):
         timeout = 5 * 60
         r_root = self._conn.invoke('load_model', (egg_filename,),
                                    timeout=timeout)
-        proxy = NAS_Component(self._conn.dmz_host, self._host, r_root)
+        proxy = NAS_Component(self._conn.dmz_host, self._host,
+                              self._conn.username, r_root)
         self._proxies.append(proxy)
         return proxy
 
@@ -526,10 +537,11 @@ class _Finalizer(object):
 class NAS_Component(object):
     """ Knows about some of the :class:`Component` API. """
 
-    def __init__(self, dmz_host, server_host, path):
+    def __init__(self, dmz_host, server_host, username, path):
         self._host = server_host
         self._logger = logging.getLogger(path)
-        self._conn = connect(dmz_host, server_host, path, self._logger)
+        self._conn = connect(dmz_host, server_host, username, path,
+                             self._logger)
 
     def shutdown(self):
         """ Shut-down this proxy. """

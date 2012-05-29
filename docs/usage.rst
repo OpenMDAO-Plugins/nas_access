@@ -1,3 +1,4 @@
+.. _`usage`:
 
 
 ===========
@@ -10,6 +11,11 @@ security concerns, direct access to these systems requires either a manual
 login process, or obtaining a time-limited 'token'. The workaround implemented
 here is to use the 'DMZ' fileservers as an intermediary communication
 channel between a local client and a special remote job entry (RJE) server.
+
+.. figure:: dataflow.png
+   :align: center
+
+   Remote NAS Access Dataflow 
 
 .. note::
 
@@ -38,7 +44,7 @@ appropriately. The ``PBS_Allocator`` should also be made available in your
 
     [PBS]
     classname: pbs.PBS_Allocator
-    account_id: no-default-set
+    accounting_id: no-default-set
 
 where ``no-default-set`` is replaced by your group account ID.
 
@@ -93,5 +99,7 @@ transfers. Consider having your job submission being a Python script which
 can copy or link to other files on the remote host rather than setting the
 execution directory to where those files reside.
 
-Consult the :ref:`nas_access_src_label` section for more detail.
+A :ref:`tutorial` covering installation and testing step-by-step is available.
+
+Consult the :ref:`nas_access_src_label` section for implementation details.
 

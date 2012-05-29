@@ -129,7 +129,7 @@ class AllocatorWrapper(BaseWrapper):
 
         path = '%s/%s' % (self._conn.root, name)
         logger = logging.getLogger(fullname)
-        connection = Connection(self._conn.dmz_host, path, True,
+        connection = Connection(None, self._conn.dmz_host, path, True,
                                 self._poll_delay, logger)
         wrapper = ServerWrapper(server, connection, fullname)
 
@@ -270,7 +270,7 @@ class ServerWrapper(BaseWrapper):
         path = '%s/%s' % (self._conn.root, name)
         fullname = '%s-%s' % (self._name, name)
         logger = logging.getLogger(fullname)
-        connection = Connection(self._conn.dmz_host, path, True,
+        connection = Connection(None, self._conn.dmz_host, path, True,
                                 self._poll_delay, logger)
         wrapper = ComponentWrapper(tlo, connection)
 

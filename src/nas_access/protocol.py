@@ -129,7 +129,7 @@ def configure_scp(cmdlist):
     return previous
 
 
-def _ssh(host, args, logger, retry=True):
+def _ssh(user, host, args, logger, retry=True):
     """
     Return lines from `host` executing `args`.
 
@@ -145,7 +145,7 @@ def _ssh(host, args, logger, retry=True):
     """
     cmd = []
     cmd.extend(_SSH)
-    cmd.extend(('-l', getpass.getuser()))
+    cmd.extend(('-l', user if user else getpass.getuser()))
     cmd.append(host)
     cmd.extend(args)
 
@@ -187,12 +187,15 @@ def _ssh(host, args, logger, retry=True):
     return stdout.split()
 
 
-def _scp_send(path, host, directory, name, logger):
+def _scp_send(path, user, host, directory, name, logger):
     """
     Send `path` to `host`:`directory` as `name`.
 
     path: string
         Path to local file.
+
+    user: string
+        Username on `host` or None.
 
     host: string
         Host to send to.
@@ -208,12 +211,17 @@ def _scp_send(path, host, directory, name, logger):
     """
     src = path
     dst = _map_path('%s:%s/%s' % (host, directory, name))
-    _scp(src, dst, logger)
+    if user and sys.platform != 'win32':
+        dst = '%s@%s' % (user, dst)
+    _scp(user, src, dst, logger)
 
 
-def _scp_recv(host, directory, name, path, logger):
+def _scp_recv(user, host, directory, name, path, logger):
     """
     Receive `name` in `host`:`directory` to `path`.
+
+    user: string
+        Username on `host` or None.
 
     host: string
         Host to receive from.
@@ -231,14 +239,19 @@ def _scp_recv(host, directory, name, path, logger):
         Displays full command being executed.
     """
     src = _map_path('%s:%s/%s' % (host, directory, name))
+    if user and sys.platform != 'win32':
+        src = '%s@%s' % (user, src)
     dst = path
-    _scp(src, dst, logger)
+    _scp(user, src, dst, logger)
 
 
-def _scp(src, dst, logger):
+def _scp(user, src, dst, logger):
     """
     Use 'scp' to copy `src` to `dst`.
     The command will be attempted up to three times.
+
+    user: string
+        Remote username or None.
 
     src, dst: string
         Source and destination designations.
@@ -249,7 +262,7 @@ def _scp(src, dst, logger):
     cmd = []
     cmd.extend(_SCP)
     if sys.platform == 'win32':  # pragma no cover
-        cmd.extend(('-l', getpass.getuser()))
+        cmd.extend(('-l', user if user else getpass.getuser()))
     cmd.extend((src, dst))
 
     logger.log(DEBUG3, '%s', cmd)
@@ -283,7 +296,7 @@ def _scp(src, dst, logger):
             break
 
 
-def connect(dmz_host, server_host, path, logger):
+def connect(dmz_host, server_host, username, path, logger):
     """
     Connect client to server. Returns :class:`Connection`.
 
@@ -300,6 +313,9 @@ def connect(dmz_host, server_host, path, logger):
     server_host: string
         Remote server host.
 
+    username: string
+        Username on `dmz_host` or None.
+
     path: string
         Path to communications directory.
 
@@ -309,13 +325,13 @@ def connect(dmz_host, server_host, path, logger):
     root = _server_root(server_host)
     logger.debug('connecting to %s at %s', root, dmz_host)
 
-    lines = _ssh(dmz_host, ('ls', '-1'), logger)
+    lines = _ssh(username, dmz_host, ('ls', '-1'), logger)
     mapped_root = _map_dir(root)
     if mapped_root not in lines:
         raise RuntimeError('server root %r on %r not found'
                            % (mapped_root, dmz_host))
 
-    poll_delay = check_server_heartbeat(dmz_host, server_host, logger)
+    poll_delay = check_server_heartbeat(dmz_host, server_host, username, logger)
 
     if '/' in path:  # Connect to existing communications directory.
         root = path
@@ -326,9 +342,9 @@ def connect(dmz_host, server_host, path, logger):
         mapped_root = _map_dir(root)
         if mapped_root in lines:  # Need a clean directory.
             raise RuntimeError('client root %r already exists', mapped_root)
-        _ssh(dmz_host, ('date', '>', mapped_root), logger)
+        _ssh(username, dmz_host, ('date', '>', mapped_root), logger)
 
-    return Connection(dmz_host, root, False, poll_delay, logger)
+    return Connection(username, dmz_host, root, False, poll_delay, logger)
 
 
 def _server_root(hostname=None):
@@ -357,10 +373,10 @@ def server_init(dmz_host, logger):  # pragma no cover
     root = _server_root()
     mapped_root = _map_dir(root)  # Ensure a clean remote tree.
     try:
-        _ssh(dmz_host, ('rm', '-f', '%s*' % mapped_root), logger)
+        _ssh(None, dmz_host, ('rm', '-f', '%s*' % mapped_root), logger)
     except Exception as exc:  # pragma no cover
         logger.warning("Can't remove server root: %s", exc)
-    _ssh(dmz_host, ('date', '>', mapped_root), logger)
+    _ssh(None, dmz_host, ('date', '>', mapped_root), logger)
 
 
 # Server-side.
@@ -380,7 +396,7 @@ def server_accept(dmz_host, poll_delay, logger):  # pragma no cover
     """
     root = _server_root()
     mapped_root = _map_dir(root)
-    lines = _ssh(dmz_host, ('ls', '-1'), logger)
+    lines = _ssh(None, dmz_host, ('ls', '-1'), logger)
     lines = [line[len(mapped_root):] for line in lines
                                               if line.startswith(mapped_root)]
     info = None
@@ -400,7 +416,7 @@ def server_accept(dmz_host, poll_delay, logger):  # pragma no cover
             logger.info('New client %r', client)
             root = '%s/%s' % (root, client)
             logger = logging.getLogger(client)
-            conn = Connection(dmz_host, root, True, poll_delay, logger)
+            conn = Connection(None, dmz_host, root, True, poll_delay, logger)
             info = (client, conn)
     
     return (info, removed)
@@ -424,7 +440,7 @@ def server_heartbeat(dmz_host, poll_delay, logger):
         os.close(fd)
         with open(path, 'w') as out:
             out.write('%s\n%s\n%s\n' % (tstamp, poll_delay, __version__))
-        _scp_send(path, dmz_host, root, 'heartbeat', logger)
+        _scp_send(path, None, dmz_host, root, 'heartbeat', logger)
     finally:
         try:
             os.remove(path)
@@ -432,7 +448,7 @@ def server_heartbeat(dmz_host, poll_delay, logger):
             logger.warning("Can't remove temporary file: %s", exc)
 
 
-def check_server_heartbeat(dmz_host, server_host, logger):
+def check_server_heartbeat(dmz_host, server_host, username, logger):
     """
     Check that the server heartbeat file is 'current'.
     Returns server polling rate.
@@ -442,6 +458,9 @@ def check_server_heartbeat(dmz_host, server_host, logger):
 
     server_host: string
         Remote server.
+
+    username: string
+        Username on `dmz_host`, or None.
     """
     logger.log(DEBUG2, 'check_server_heartbeat')
     root = _server_root(server_host)
@@ -449,7 +468,7 @@ def check_server_heartbeat(dmz_host, server_host, logger):
     try:
         os.close(fd)
         try:
-            _scp_recv(dmz_host, root, 'heartbeat', path, logger)
+            _scp_recv(username, dmz_host, root, 'heartbeat', path, logger)
         except Exception as exc:
             raise RuntimeError("can't retrieve server heartbeat: %s" % exc)
         with open(path, 'rU') as inp:
@@ -499,7 +518,7 @@ def server_cleanup(dmz_host, logger):  # pragma no cover
     root = _server_root()
     mapped_root = _map_dir(root)
     try:
-        _ssh(dmz_host, ('rm', '-f', '%s*' % mapped_root), logger)
+        _ssh(None, dmz_host, ('rm', '-f', '%s*' % mapped_root), logger)
     except Exception as exc:
         logger.warning("Can't cleanup server root: %s", exc)
 
@@ -508,6 +527,9 @@ class Connection(object):
     """
     One end of a file-based communication channel.
     Files are stored on `dmz_host` in the `root` directory.
+
+    username: string
+        Username on `dmz_host`, or None.
 
     dmz_host: string
         Intermediary file server.
@@ -525,8 +547,9 @@ class Connection(object):
         Displays progress messages.
     """
 
-    def __init__(self, dmz_host, root, server, poll_delay, logger):
+    def __init__(self, username, dmz_host, root, server, poll_delay, logger):
         logger.info('initializing')
+        self.username = username
         self.dmz_host = dmz_host
         self.root = root
         self.poll_delay = poll_delay
@@ -550,7 +573,8 @@ class Connection(object):
         self._logger.debug('close')
         mapped_root = _map_dir(self.root)
         try:
-            _ssh(self.dmz_host, ('rm', '-f', '%s*' % mapped_root), self._logger)
+            _ssh(self.username, self.dmz_host,
+                 ('rm', '-f', '%s*' % mapped_root), self._logger)
         except Exception as exc:
             self._logger.error('Error during close: %s', exc)
 
@@ -679,7 +703,7 @@ class Connection(object):
         """
         ready = '%s-ready.%s' % (prefix, seqno)
         mapped_root = _map_dir(self.root)
-        lines = _ssh(self.dmz_host, ('ls', '-1'), self._logger)
+        lines = _ssh(self.username, self.dmz_host, ('ls', '-1'), self._logger)
         lines = [line[len(mapped_root):] for line in lines
                                          if line.startswith(mapped_root)]
         self._logger.log(DEBUG2, 'poll %s %s', ready, lines)
@@ -755,7 +779,8 @@ class Connection(object):
         name: string
             Name of remote file.
         """
-        _scp_send(path, self.dmz_host, self.root, name, self._logger)
+        _scp_send(path, self.username, self.dmz_host, self.root, name,
+                  self._logger)
 
     def recv_file(self, name, path):
         """
@@ -767,7 +792,8 @@ class Connection(object):
         path: string
             Path to local file.
         """
-        _scp_recv(self.dmz_host, self.root, name, path, self._logger)
+        _scp_recv(self.username, self.dmz_host, self.root, name, path,
+                  self._logger)
 
     def remove_files(self, names):
         """
@@ -780,7 +806,7 @@ class Connection(object):
         for name in names:
             cmd.append(_map_path('%s/%s' % (self.root, name)))
         try:
-            _ssh(self.dmz_host, cmd, self._logger)
+            _ssh(self.username, self.dmz_host, cmd, self._logger)
         except Exception as exc:  # pragma no cover
             self._logger.warning("Can't remove remote file(s): %s", exc)
 
@@ -792,5 +818,6 @@ class Connection(object):
             Name of remote file to create.
         """
         fullname = '%s/%s' % (self.root, name)
-        _ssh(self.dmz_host, ('date', '>', _map_path(fullname)), self._logger)
+        _ssh(self.username, self.dmz_host, ('date', '>', _map_path(fullname)),
+             self._logger)
 
