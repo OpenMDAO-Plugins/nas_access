@@ -18,6 +18,7 @@ from nas_access.protocol import server_init, server_accept, server_heartbeat, \
 from nas_access.wrapper import AllocatorWrapper
 
 _DMZ_HOST = None
+_RJE_PID  = -1
 
 
 def main(): # pragma no cover
@@ -92,9 +93,13 @@ def main(): # pragma no cover
     print msg
     logger.info(msg)
 
+    # Setup for cleanup by this process only.
+    global _RJE_PID
+    _RJE_PID = os.getpid()
+    signal.signal(signal.SIGTERM, _sigterm_handler)
+
     # And away we go...
     wrappers = {}
-    signal.signal(signal.SIGTERM, _sigterm_handler)
     try:
         delay = 1  # Start with high polling rate.
         while True:
@@ -132,9 +137,10 @@ def _sigterm_handler(signum, frame):  # pragma no cover
 
 def _cleanup():  # pragma no cover
     """ Cleanup in preparation to shut down. """
-    keep_dirs = int(os.environ.get('OPENMDAO_KEEPDIRS', '0'))
-    if not keep_dirs:
-        server_cleanup(_DMZ_HOST, logging.getLogger())
+    if os.getpid() == _RJE_PID:  # Forked sub-servers should NOT cleanup!
+        keep_dirs = int(os.environ.get('OPENMDAO_KEEPDIRS', '0'))
+        if not keep_dirs:
+            server_cleanup(_DMZ_HOST, logging.getLogger())
 
 
 if __name__ == '__main__':

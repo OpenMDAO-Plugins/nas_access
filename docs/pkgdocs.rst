@@ -25,5 +25,5 @@ Package Metadata
 
 - **summary:** OpenMDAO interface to NASA HEC systems at Ames Research Center.
 
-- **version:** 0.3
+- **version:** 0.4
 
