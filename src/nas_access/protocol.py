@@ -397,21 +397,30 @@ def server_accept(dmz_host, poll_delay, logger):  # pragma no cover
     root = _server_root()
     mapped_root = _map_dir(root)
     lines = _ssh(None, dmz_host, ('ls', '-1'), logger)
-    lines = [line[len(mapped_root):] for line in lines
+    files = [line[len(mapped_root):] for line in lines
                                               if line.startswith(mapped_root)]
     info = None
     removed = []
+    cleanups = []
     for client in _CLIENTS:
-        if _map_dir(client) not in lines:
+        if _map_dir(client) not in files:
             logger.info('Client %r closed', client)
+            for line in lines:
+                logger.log(DEBUG3, '    %s', line)
             _CLIENTS.remove(client)
             removed.append(client)
 
-    for line in lines:
+    for line in files:
         if not line or line == 'heartbeat':
             continue
         client, sep, rest = line.partition(_SEP)
-        if client not in _CLIENTS:
+        if client in removed:
+            # Must be a stray client file that didn't get cleaned up.
+            logger.warning('Stale client file %r', line)
+            for line in lines:
+                logger.log(DEBUG3, '    %s', line)
+            cleanups.append(line)
+        elif client not in _CLIENTS:
             _CLIENTS.append(client)
             logger.info('New client %r', client)
             root = '%s/%s' % (root, client)
@@ -419,6 +428,15 @@ def server_accept(dmz_host, poll_delay, logger):  # pragma no cover
             conn = Connection(None, dmz_host, root, True, poll_delay, logger)
             info = (client, conn)
     
+    if cleanups:
+        cmd = ['rm', '-f']
+        for path in cleanups:
+            cmd.append('%s%s' % (mapped_root, path))
+        try:
+            _ssh(None, dmz_host, cmd, logger)
+        except Exception as exc:  # pragma no cover
+            logger.warning("Can't cleanup file(s): %s", str(exc) or repr(exc))
+
     return (info, removed)
 
 
@@ -704,10 +722,12 @@ class Connection(object):
         ready = '%s-ready.%s' % (prefix, seqno)
         mapped_root = _map_dir(self.root)
         lines = _ssh(self.username, self.dmz_host, ('ls', '-1'), self._logger)
-        lines = [line[len(mapped_root):] for line in lines
+        files = [line[len(mapped_root):] for line in lines
                                          if line.startswith(mapped_root)]
-        self._logger.log(DEBUG2, 'poll %s %s', ready, lines)
-        return ready in lines
+        self._logger.log(DEBUG2, 'poll %s %s', ready, files)
+        for line in lines:
+            self._logger.log(DEBUG3, '    %s', line)
+        return ready in files
 
     def _wait(self, prefix, seqno, timeout=0):
         """

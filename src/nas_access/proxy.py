@@ -261,6 +261,12 @@ class NAS_Server(object):
             self._conn.close()
             self._conn = None
 
+    @rbac(('owner', 'user'))
+    def set_log_level(self, level):
+        """ Set logging level to `level`. """
+        self._logger.info('log_level %s', level)
+        self._logger.setLevel(level)
+
     @rbac('*')
     def echo(self, *args):
         """
