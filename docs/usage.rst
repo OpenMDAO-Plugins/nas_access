@@ -8,8 +8,8 @@ Usage Guide
 This package provides a mechanism to remotely submit jobs to the NASA High
 End Computing (HEC) resources located at the Ames Research Center. Due to
 security concerns, direct access to these systems requires either a manual
-login process, or obtaining a time-limited 'token'. The workaround implemented
-here is to use the 'DMZ' fileservers as an intermediary communication
+login process, or obtaining a time-limited `token`. The workaround implemented
+here is to use the `DMZ` fileservers as an intermediary communication
 channel between a local client and a special remote job entry (RJE) server.
 
 .. figure:: dataflow.png
@@ -21,41 +21,43 @@ channel between a local client and a special remote job entry (RJE) server.
 
     Due to the indirect nature of the communications between the local client
     and remote server, transactions are very slow (many seconds). Be patient
-    when using this allocator, and be advised that you probably don't want
+    when using this allocator and be advised that you probably don't want
     this allocator enabled unless you expect to require it.
 
 To be able to remotely submit jobs you need to perform four configuration
 operations:
 
-1. 'ssh' access from one or more HEC front-end machines (i.e. ``pfe1``) to one
-or both of the DMZ servers (``dmzfs1.nas.nasa.gov`` and ``dmzfs2.nas.nasa.gov``)
-must be set up so that no user interaction is required (see 'ssh' documentation
-for details).
+#. "ssh" access from one or more HEC front-end machines (i.e., ``pfe1``) to one
+   or both of the DMZ servers (``dmzfs1.nas.nasa.gov`` and ``dmzfs2.nas.nasa.gov``)
+   must be set up so that no user interaction is required (see 'ssh' documentation
+   for details).
 
-2. 'ssh' (Linux/Mac) or 'plink'/'pscp' (Windows) access from your local machine
-to one or both of the DMZ servers must be set up so that no user interaction is
-required.
+#. "ssh" (Linux/Mac) or "plink"/"pscp" (Windows) access from your local machine
+   to one or both of the DMZ servers must be set up so that no user interaction is
+   required.
 
-3. On the HEC front-end machine(s) your OpenMDAO environment must be configured
-to enable the :mod:`nas_access` and :mod:`pbs` packages, contained in the
-``contrib`` area. This can be done by installing them or setting ``PYTHONPATH``
-appropriately. The ``PBS_Allocator`` should also be made available in your
-``~/.openmdao/resources.cfg`` file::
+#. On the HEC front-end machine(s) your OpenMDAO environment must be configured
+   to enable the :mod:`nas_access` and :mod:`pbs` packages, contained in the
+   ``contrib`` area. This can be done by installing them or setting ``PYTHONPATH``
+   appropriately. The ``PBS_Allocator`` should also be made available in your
+   ``~/.openmdao/resources.cfg`` file
+   
+   ::
 
-    [PBS]
-    classname: pbs.PBS_Allocator
-    accounting_id: no-default-set
+     [PBS]
+     classname: pbs.PBS_Allocator
+     accounting_id: no-default-set
 
-where ``no-default-set`` is replaced by your group account ID.
+   where ``no-default-set`` is replaced by your group account ID.
 
-4. On your local machine your OpenMDAO environment must be configured to enable
-the :mod:`nas_access` package.
+#. On your local machine your OpenMDAO environment must be configured to enable
+   the :mod:`nas_access` package.
 
-Usage of the remote submission capability requires that the RJE server be
+Use of the remote submission capability requires that the RJE server be
 running on an HEC front-end machine and the simulation on your local machine
 be set up to use the ``NAS_Allocator``.
 
-First start the RJE server on a front-end machine (i.e. ``pfe1``)::
+First, start the RJE server on a front-end machine (i.e., ``pfe1``)::
 
     python -m nas_access.rje
 
@@ -70,7 +72,7 @@ This can be done by updating your ``~/.openmdao/resources.cfg`` file::
     dmz_host: dmzfs1.nas.nasa.gov
     server_host: pfe1
 
-note that the ``dmz_host`` and ``server_host`` entries may be different
+Note that the ``dmz_host`` and ``server_host`` entries may be different
 depending on which remote hosts you intend to use.
 
 Alternatively, you can programmatically add the allocator to the resource

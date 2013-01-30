@@ -18,14 +18,14 @@ access scheme.
 
 .. note::
 
-    Various references to the host dmzfs1.nasa.nasa.gov are made below.
-    An equivalent is dmzfs2.nas.nasa.gov.  Either may be used as long as
+    Various references to the host ``dmzfs1.nasa.nasa.gov`` are made below.
+    An equivalent is ``dmzfs2.nas.nasa.gov``. Either may be used as long as
     you are consistent.
 
 .. note::
 
-    The examples below specify version 0.2.6 of OpenMDAO.  That is just the
-    latest version when this was written.  You may replace this with whatever
+    The examples below specify version 0.2.6 of OpenMDAO. That is just the
+    latest version when this was written. You may replace this with whatever
     version of OpenMDAO you need to use.
 
 
@@ -34,16 +34,16 @@ access scheme.
 *Pleiades installation*
 _______________________
 
-Installation of OpenMDAO on Pleiades is essentially the same as installation
-on any other Linux host, with a couple minor wrinkles.  First, SciPy is not
-installed.  This typically isn't a problem if you're using Pleiades to run
-some large parallel code rather than an OpenMDAO optimization.  Second, the
+Installing OpenMDAO on Pleiades is essentially the same as installing 
+on any other Linux host, with a couple of minor wrinkles. First, SciPy is not
+installed. This typically isn't a problem if you're using Pleiades to run
+some large parallel code rather than an OpenMDAO optimization. Second, the
 default user shell is ``csh`` rather than ``bash``.  If you prefer ``bash``
 as your login shell, use the ``chsh`` command::
 
     chsh /bin/bash
 
-We'll stick with ``csh`` in this tutorial.  It only requires a slight change
+We'll stick with ``csh`` in this tutorial.  It requires only a slight change
 to how you activate your OpenMDAO environment.
 
 So, start by downloading and installing OpenMDAO::
@@ -51,35 +51,35 @@ So, start by downloading and installing OpenMDAO::
     wget http://openmdao.org/releases/0.2.6/go-openmdao.py
     python go-openmdao.py --noprereqs
 
-Note the ``--noprereqs`` option, this avoids issues with SciPy not being
+Note the ``--noprereqs`` option; this avoids issues with SciPy not being
 installed.
 
-Now activate, but using a ``csh`` environment::
+Now, activate but using a ``csh`` environment::
 
     cd openmdao-0.2.6
     source bin/activate.csh
 
-Next install the ``nas_access`` plugin::
+Next, install the ``nas_access`` plugin::
 
     plugin install nas_access --github
 
 While the PBS allocator is part of the stock OpenMDAO installation, it is not
-automatically made part of the available resources.  In addition, at least at
-NAS it needs to be configured with an accounting ID.  We can configure an
-allocator named ``PBS`` with a ``~/.openmdao/resources.cfg`` file entry such
+automatically made part of the available resources. In addition, at least at
+NAS it needs to be configured with an accounting ID. We can configure an
+allocator named `PBS` with a ``~/.openmdao/resources.cfg`` file entry such
 as this::
 
     [PBS]
     classname: openmdao.main.pbs.PBS_Allocator
     accounting_id: no-default-set
 
-where ``no-default-set`` is replaced by your group account ID.  You can
+where ``no-default-set`` is replaced by your group account ID. You can
 determine your group account ID via the NAS command::
 
     acct_ytd
 
 To test that the PBS allocator is configured correctly, we'll run a
-'simulation' that outputs the process environment (code placed in
+`simulation` that outputs the process environment (code placed in
 ``pbs_test.py``)::
 
     import logging
@@ -108,7 +108,7 @@ To test that the PBS allocator is configured correctly, we'll run a
     if __name__ == '__main__':
         main()
 
-The run may take a while, but once it completes the output should contain
+The run may take a while, but once it completes, the output should contain
 ``PBS_O_QUEUE``, showing that it was run under the PBS queuing system::
 
     python pbs_test.py
@@ -203,15 +203,15 @@ The run may take a while, but once it completes the output should contain
     D PBS:         at '/tmp/pymp-NgDSUe/listener-oq491v'
     D root: sending shutdown message to manager
 
-Now to provide remote access to Pleiades, we need to set up communications
-between the front-end and DMZ hosts.  If you don't already have an ``ssh``
-key generated for Pleiades, do that now (just hit the ``Enter`` key when asked
+Now, to provide remote access to Pleiades, we need to set up communications
+between the front-end and DMZ hosts. If you don't already have an ``ssh``
+key generated for Pleiades, do that now. (Just hit the ``Enter`` key when asked
 for a file or passphrase)::
 
     ssh-keygen
 
 You should now have a ``~/.ssh/id_rsa.pub`` file. We need to copy that to the
-DMZ host we'll be using.  To help keep track of multiple keys on the remote
+DMZ host we'll be using. To help keep track of multiple keys on the remote
 host, copy it to a different name related to the host it was generated on
 (in this example ``pfe1``)::
 
@@ -229,16 +229,16 @@ To test that communications are set up correctly, run a simple test::
 
     ssh dmzfs1 date
 
-This should simply print the date (after the US Government computer access
-warning).  If you are still prompted to enter a password, something is wrong
+This should simply print the date (after the U.S. Government computer access
+warning). If you are still prompted to enter a password, something is wrong
 with your configuration.
 
 Now we're ready to run the RJE server::
 
     python -m nas_access.rje --allocator PBS &
 
-The trailing ``&`` above causes the server process to be 'backgrounded' or
-detached from the terminal shell process.  You can check hat the server is
+The trailing ``&`` above causes the server process to be put in the background, or
+detached from the terminal shell process. You can check that the server is
 running by looking at the log file::
 
     cat openmdao_log.txt
@@ -261,8 +261,8 @@ running the RJE server with the ``LocalHost`` allocator::
 
 .. note::
 
-    You can only run one RJE server per host.  To support multiple RJE
-    servers run them on separate hosts.
+    You can only run one RJE server per host. To support multiple RJE
+    servers, run them on separate hosts.
 
 
 .. index:: linux/mac client installation
@@ -280,14 +280,14 @@ Activate the OpenMDAO environment::
     cd openmdao-0.2.6
     . bin/activate
 
-Next install the ``nas_access`` plugin::
+Next, install the ``nas_access`` plugin::
 
     plugin install nas_access --github
 
 We'll need to be able to ``scp`` and ``ssh`` to one of the NAS DMZ file servers
 (``dmzfs1.nas.nasa.gov`` or ``dmzfs2.nas.nasa.gov``) without requiring any
-user intervention.  If you don't already have an ``ssh`` key generated for the
-local machine, do that now (just hit the ``Enter`` key when asked for a file or
+user intervention. If you don't already have an ``ssh`` key generated for the
+local machine, do that now. (Just hit the ``Enter`` key when asked for a file or
 passphrase)::
 
     ssh-keygen
@@ -311,8 +311,8 @@ To test that communications are set up correctly, run a simple test::
 
     ssh dmzfs1.nas.nasa.gov date
 
-This should simply print the date in the remote timezone (after the US
-Government computer access warning).  If you are still prompted to enter a
+This should simply print the date in the remote timezone (after the U.S.
+Government computer access warning). If you are still prompted to enter a
 password, something is wrong with your configuration.
 
 .. note::
@@ -328,7 +328,7 @@ password, something is wrong with your configuration.
 _____________________________
 
 Start by downloading and installing OpenMDAO. There are multiple ways of doing
-this, what's shown here is an alternative to that described in the online
+this. What's shown here is an alternative to that described in the online
 OpenMDAO documentation that works in at least some environments::
 
     start http://openmdao.org/releases/0.2.6/go-openmdao.py
@@ -339,7 +339,7 @@ Activate the OpenMDAO environment::
     cd openmdao-0.2.6
     Scripts\activate
 
-Next install the ``nas_access`` plugin::
+Next, install the ``nas_access`` plugin::
 
     plugin install nas_access --github
 
@@ -354,9 +354,9 @@ not already on your machine.  The link here is from the PuTTY download page::
 
     start http://the.earth.li/~sgtatham/putty/latest/x86/putty-0.62-installer.exe
 
-If you used the defaults during the installation process then the line below
-will update ``PATH`` appropriately (for the current session only, you'll need
-to make this permanent based on which version of Windows you're running)::
+If you used the defaults during the installation process, then the line below
+will update ``PATH`` appropriately. (For the current session only; you'll need
+to make this permanent based on which version of Windows you're running.)::
 
     set PATH=%PATH%;C:\Program Files\PuTTY
 
@@ -373,8 +373,8 @@ moving the mouse around.  You should have a window that looks like this:
 
    PuTTY Key Generation
 
-Click the ``Save private key`` button and enter a file name, for example
-``id_rsa``.  Click in the ``Public key for pasting into OpenSSH`` window,
+Click the ``Save private key`` button and enter a file name, for example,
+``id_rsa``.  Click in the ``Public key for pasting into OpenSSH`` window;
 then right-click and choose ``Select All``.  Then choose ``Copy``.
 Close puttygen and start up Notepad::
 
@@ -385,13 +385,13 @@ file to ``id_rsa.pub``.
 
 .. note::
 
-    If you 'lose' the copied public key, just restart `puttygen` and use the
+    If you `lose` the copied public key, just restart `puttygen` and use the
     ``Load`` button to reload ``id_rsa``.
 
 You should now have ``id_rsa.pub`` and ``id_rsa.ppk`` files.
 
 Next we'll create a PuTTY session named ``dmzfs1.nas.nasa.gov`` via the
-``PuTTY`` tool::
+PuTTY tool::
 
     putty
 
@@ -422,7 +422,7 @@ Use the ``Save`` button (shown in the opening screen) to save the session.
 With a public/private key pair generated and a session referencing them
 created, we now need to copy the public key file to the DMZ host we'll be
 using.  To help keep track of multiple keys on the remote host, copy it to a
-different name related to the host it was generated on (in this example
+different name related to the host it was generated on (in this example,
 ``pc``)::
 
     pscp id_rsa.pub dmzfs1.nas.nasa.gov:.ssh/id_rsa.pc
@@ -439,7 +439,7 @@ To test that communications are set up correctly, run a simple test::
 
     plink dmzfs1.nas.nasa.gov date
 
-This should simply print the date (in the remote timezone).  If you are still
+This should simply print the date (in the remote timezone). If you are still
 prompted to enter a password, something is wrong with your configuration.
 
 .. warning::
@@ -461,7 +461,7 @@ OpenMDAO code for this tutorial.  The :ref:`usage` has an example configuration
 file.
 
 To test that your NAS access configuration is functional, we'll run a trivial
-'simulation' that outputs the process environment (code placed in
+`simulation` that outputs the process environment (code placed in
 ``nas_test.py``)::
 
     import logging
@@ -499,7 +499,7 @@ To test that your NAS access configuration is functional, we'll run a trivial
         main()
 
 Note that the above defines a single ``NAS_Allocator``.  You can define as
-many allocators as RJE servers that are running.  You can only have one RJE
+many allocators as  there are RJE servers running. You can have only one RJE
 server running on a front-end host, but Pleiades has multiple front-end hosts,
 so simply alter the ``server_host`` argument to suit.  For instance, two
 allocators could provide access to remote LocalHost as well as PBS servers.
@@ -616,7 +616,7 @@ Running the test should get output similar to this::
     D Pleiades: reply 4: None
     D Pleiades: close
 
-Corrseponding server output should like similar to this::
+Corrseponding server output should look similar to this::
 
     I root: New client 'ip-10-243-75-178-1493-Pleiades'
     I ip-10-243-75-178-1493-Pleiades: initializing
