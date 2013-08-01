@@ -70,11 +70,12 @@ kwargs = {'author': '',
                                  'test/test_nas_access.py',
                                  'test/.coverage',
                                  'test/ssh.py',
-                                 'test/scp.py']},
+                                 'test/scp.py',
+                                 'test/openmdao_log_1482.txt']},
  'package_dir': {'': 'src'},
  'packages': ['nas_access'],
  'url': '',
- 'version': '0.4',
+ 'version': '0.6',
  'zip_safe': False}
 
 

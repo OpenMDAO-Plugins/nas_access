@@ -5,8 +5,8 @@ Package Metadata
 
 - **classifier**:: 
 
-    Intended Audience: Science/Research
-    Topic: Scientific/Engineering
+    Intended Audience :: Science/Research
+    Topic :: Scientific/Engineering
 
 - **description-file:** README.txt
 
@@ -25,5 +25,5 @@ Package Metadata
 
 - **summary:** OpenMDAO interface to NASA HEC systems at Ames Research Center.
 
-- **version:** 0.4
+- **version:** 0.6
 
