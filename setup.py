@@ -12,7 +12,7 @@ kwargs = {'author': '',
                  'Topic :: Scientific/Engineering'],
  'description': 'OpenMDAO interface to NASA HEC systems at Ames Research Center.',
  'download_url': '',
- 'entry_points': '',
+ 'entry_points': '[openmdao.component]\ntest_nas_access.Echo=test_nas_access:Echo\n\n[openmdao.container]\ntest_nas_access.Echo=test_nas_access:Echo',
  'include_package_data': True,
  'install_requires': ['openmdao.main'],
  'keywords': ['openmdao'],
@@ -72,7 +72,7 @@ kwargs = {'author': '',
  'package_dir': {'': 'src'},
  'packages': ['nas_access'],
  'url': '',
- 'version': '0.5',
+ 'version': '0.6',
  'zip_safe': False}
 
 

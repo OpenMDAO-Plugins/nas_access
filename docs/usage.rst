@@ -93,15 +93,91 @@ this allocator may be selected to be used for the run. This can easily be
 forced by setting ``allocator='Pleiades'`` (or whatever you've named the
 allocator).
 
-Note that the default execution directory and file access directory is the
-directory in which the OpenMDAO object server is running (a dynamically
-generated subdirectory of the RJE server). You may set the execution directory
-in the resource description, but at this time this has no effect on file
-transfers. Consider having your job submission being a Python script which
-can copy or link to other files on the remote host rather than setting the
-execution directory to where those files reside.
-
 A :ref:`tutorial` covering installation and testing step-by-step is available.
 
 Consult the :ref:`nas_access_src_label` section for implementation details.
+
+
+=====
+Hints
+=====
+
+
+*Execution Directory*
+_____________________
+
+The default execution directory and file access directory is the
+directory in which the OpenMDAO object server is running (a dynamically
+generated subdirectory of the RJE server). You may set the execution directory
+in the resource description, but at this time this has no effect on file
+transfers. Consider having your job submission be a script which
+can copy or link to other files on the remote host rather than setting the
+execution directory to where those files reside.
+
+Normally the execution directory is cleaned-up once the simulation has
+completed. This can make for difficult debugging. To avoid having the directory
+removed, set the environment variable ``OPENMDAO_KEEPDIRS`` to 1 before
+starting the RJE server.
+
+
+*Handling System Reboots*
+_________________________
+
+At NAS systems occasionally go down (typically for scheduled maintenance, but
+sometimes without warning).  This can happen for any of the systems: front-ends,
+DMZ servers, etc.  You can increase the reliability of accessing NAS by
+defining multiple RJE servers using multiple front-end systems and multiple
+DMZ servers.  Then, if one of the RJE servers is unavailable the Resource
+Allocation Manager should be able to use one of the other RJE servers.
+Note that for this to work your resource description should use 'generic'
+allocation terms rather than ``allocator=Pleiades``.  Note that this will
+only help for initial access.  If a server goes down during a job run there
+currently is no way to recover.
+
+
+*Execution Outside of PBS Job*
+______________________________
+
+Using NAS systems typically means submitting a job via PBS.  If your RJE server
+is configured to use the PBS allocator, then your command will be executed
+entirely within a PBS job.  If you have pre- or post-processing activities
+which you don't want to count against your PBS allocation, you can instead
+use the ``LocalHost`` allocator to run a command which does the preprocessing,
+submits the PBS job, and then does the postprocessing.  This requires that
+you perfom the ``qsub`` operation yourself.  Be sure to use the
+``-W block=true`` option to ensure that ``qsub`` will not return until the
+job has completed.  Also, when using a Local allocator for non-CPU intensive
+operations, setting ``max_load`` to something higher than the default of 1
+will ensure your submission isn't held up just because the local system
+is busy.
+
+To have your RJE server use a local allocator specify it on the command line::
+
+    python -m nas_access.rje --allocator LocalHost
+
+
+*Usage Within the GUI*
+______________________
+
+The only tricky part to using nas_access in the GUI is dealing with configuring
+the resource manager.
+
+Suppose you have a file that runs from the command line and in ``main()`` it
+configures the resource manager to include a NAS_Allocator::
+
+    def main():
+        allocator = NAS_Allocator(name='Pleiades',
+                                  dmz_host='dmzfs1.nas.nasa.gov',
+                                  server_host='pfe22')
+        RAM.add_allocator(allocator)
+
+        # Configure and run a simulation.
+
+If you 'execute' the file from within the GUI it's just like executing from the
+command line, *but* when you reopen the project the 'execute' is replayed,
+including running the simulation, which can be inconvenient.  An alternative is
+to have a file that just configures the resource manager.  Execute that file.
+Now add class files like normal and configure your simulation.  When you reopen
+the project the resource manager configure script will be replayed, but the
+rest of the model is just opened, not re-run.
 
