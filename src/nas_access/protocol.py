@@ -341,7 +341,7 @@ def connect(dmz_host, server_host, username, path, logger):
     if root != path:  # Create communications directory.
         mapped_root = _map_dir(root)
         if mapped_root in lines:  # Need a clean directory.
-            raise RuntimeError('client root %r already exists', mapped_root)
+            raise RuntimeError('client root %r already exists' % mapped_root)
         _ssh(username, dmz_host, ('date', '>', mapped_root), logger)
 
     return Connection(username, dmz_host, root, False, poll_delay, logger)
