@@ -5,7 +5,7 @@
 ====================
 Source Documentation
 ====================
-        
+
         
 .. index:: protocol.py
 
@@ -18,7 +18,7 @@ protocol.py
    :members:
    :undoc-members:
    :show-inheritance:
-    
+
         
 .. index:: proxy.py
 
@@ -31,7 +31,7 @@ proxy.py
    :members:
    :undoc-members:
    :show-inheritance:
-    
+
         
 .. index:: rje.py
 
@@ -44,7 +44,7 @@ rje.py
    :members:
    :undoc-members:
    :show-inheritance:
-    
+
         
 .. index:: wrapper.py
 
@@ -57,5 +57,5 @@ wrapper.py
    :members:
    :undoc-members:
    :show-inheritance:
-    
+
         
