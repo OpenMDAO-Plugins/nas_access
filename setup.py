@@ -66,15 +66,13 @@ kwargs = {'author': '',
                                  'sphinx_build/html/_images/putty-session.png',
                                  'sphinx_build/html/_images/putty-user.png',
                                  'sphinx_build/html/_images/putty-gen.png',
-                                 'test/nas_test.py',
                                  'test/test_nas_access.py',
-                                 'test/.coverage',
                                  'test/ssh.py',
                                  'test/scp.py']},
  'package_dir': {'': 'src'},
  'packages': ['nas_access'],
  'url': '',
- 'version': '0.4',
+ 'version': '0.5',
  'zip_safe': False}
 
 
