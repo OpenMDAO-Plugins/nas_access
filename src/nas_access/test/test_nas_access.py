@@ -248,23 +248,41 @@ class TestCase(unittest.TestCase):
             logging.debug('execute bad command')
             code = "server.execute_command(dict(remote_command='no-such-command'))"
             if sys.platform == 'win32':
-                msg = "WindowsError('[Error 2] The system cannot find the file specified')"
+                msg = "WindowsError: [Error 2] The system cannot find the file specified"
             else:
-                msg = "OSError('[Errno 2] No such file or directory')"
-            assert_raises(self, code, globals(), locals(),
-                          protocol.RemoteError, msg)
+                msg = "OSError: [Errno 2] No such file or directory"
+            try:
+                server.execute_command(dict(remote_command='no-such-command'))
+            except protocol.RemoteError as exc:
+                exc_msg = str(exc)
+                if msg not in exc_msg:
+                    self.fail('%s not in %s' % (msg, exc_msg))
+            else:
+                self.fail('Expecting protocol.RemoteError')
 
             logging.debug('open bad file')
-            msg = "Can't open '../../illegal-access', not within root"
-            msg = 'RuntimeError("%s' % msg
-            assert_raises(self, "server.open('../../illegal-access', 'r')",
-                          globals(), locals(), protocol.RemoteError, msg)
+            msg = "Can\\'t open \\'../../illegal-access\\', not within root"
+            msg = 'RuntimeError: %s' % msg
+            try:
+                server.open('../../illegal-access', 'r')
+            except protocol.RemoteError as exc:
+                exc_msg = str(exc)
+                if msg not in exc_msg:
+                    self.fail('%s not in %s' % (msg, exc_msg))
+            else:
+                self.fail('Expecting protocol.RemoteError')
 
             logging.debug('open missing file')
-            msg = "[Errno 2] No such file or directory: 'no-such-file'"
-            msg = 'IOError("%s' % msg
-            assert_raises(self, "server.open('no-such-file', 'r')",
-                          globals(), locals(), protocol.RemoteError, msg)
+            msg = "[Errno 2] No such file or directory: \\'no-such-file\\'"
+            msg = 'IOError: %s' % msg
+            try:
+                server.open('no-such-file', 'r')
+            except protocol.RemoteError as exc:
+                exc_msg = str(exc)
+                if msg not in exc_msg:
+                    self.fail('%s not in %s' % (msg, exc_msg))
+            else:
+                self.fail('Expecting protocol.RemoteError')
         finally:
             logging.debug('release')
             RAM.release(server)

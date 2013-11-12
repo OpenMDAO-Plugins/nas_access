@@ -10,6 +10,15 @@ Package Metadata
 
 - **description-file:** README.txt
 
+- **entry_points**:: 
+
+    [openmdao.component]
+    nas_access.test.test_nas_access.Echo=nas_access.test.test_nas_access:Echo
+    nas_access.test.nas_test.Simulation=nas_access.test.nas_test:Simulation
+    [openmdao.container]
+    nas_access.test.test_nas_access.Echo=nas_access.test.test_nas_access:Echo
+    nas_access.test.nas_test.Simulation=nas_access.test.nas_test:Simulation
+
 - **keywords:** openmdao
 
 - **name:** nas_access
@@ -25,5 +34,5 @@ Package Metadata
 
 - **summary:** OpenMDAO interface to NASA HEC systems at Ames Research Center.
 
-- **version:** 0.6
+- **version:** 0.6.1
 
