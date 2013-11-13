@@ -46,6 +46,19 @@ rje.py
    :show-inheritance:
 
         
+.. index:: nas_test.py
+
+.. _nas_access.test.nas_test.py:
+
+nas_test.py
+-----------
+
+.. automodule:: nas_access.test.nas_test
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+        
 .. index:: scp.py
 
 .. _nas_access.test.scp.py:
