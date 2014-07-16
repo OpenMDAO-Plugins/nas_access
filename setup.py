@@ -79,7 +79,7 @@ kwargs = {'author': '',
  'package_dir': {'': 'src'},
  'packages': ['nas_access', 'nas_access.test'],
  'url': '',
- 'version': '0.6.1',
+ 'version': '0.6.2',
  'zip_safe': False}
 
 
