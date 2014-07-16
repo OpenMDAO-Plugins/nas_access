@@ -204,7 +204,7 @@ class ServerWrapper(BaseWrapper):
             os.close(fd)
             self._conn.recv_file(filename, path)
             mode = 'b' if binary else ''
-            filexfer(None, path, self._delegate, filename, mode)
+            filexfer(None, path, self._delegate, filename, mode, False)
             self._conn.remove_files((filename,))
         finally:
             try:
@@ -226,7 +226,7 @@ class ServerWrapper(BaseWrapper):
         try:
             os.close(fd)
             mode = 'b' if binary else ''
-            filexfer(self._delegate, filename, None, path, mode)
+            filexfer(self._delegate, filename, None, path, mode, False)
             self._conn.send_file(path, filename)
         finally:
             try:

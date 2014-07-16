@@ -73,13 +73,15 @@ kwargs = {'author': '',
                                  'test/__init__.py',
                                  'test/nas_test.py',
                                  'test/test_nas_access.py',
+                                 'test/openmdao_log.txt',
                                  'test/.coverage',
                                  'test/ssh.py',
+                                 'test/error.out',
                                  'test/scp.py']},
  'package_dir': {'': 'src'},
  'packages': ['nas_access', 'nas_access.test'],
  'url': '',
- 'version': '0.6.1',
+ 'version': '0.6.2',
  'zip_safe': False}
 
 
