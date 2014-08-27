@@ -120,6 +120,7 @@ def main(): # pragma no cover
                 handler.daemon = True
                 handler.start()
                 wrappers[client] = wrapper
+                delay = 1  # Reset.
     except KeyboardInterrupt:
         pass
     finally:

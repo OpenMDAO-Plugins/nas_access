@@ -424,9 +424,10 @@ def server_accept(dmz_host, poll_delay, logger):  # pragma no cover
             _CLIENTS.append(client)
             logger.info('New client %r', client)
             root = '%s/%s' % (root, client)
-            logger = logging.getLogger(client)
-            conn = Connection(None, dmz_host, root, True, poll_delay, logger)
+            conn = Connection(None, dmz_host, root, True, poll_delay,
+                              logging.getLogger(client))
             info = (client, conn)
+            break
     
     if cleanups:
         cmd = ['rm', '-f']
